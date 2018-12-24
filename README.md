@@ -1,6 +1,18 @@
 # Foosbot
 
-A minimal Slack bot to manage foosball games.
+A minimal Slack bot to manage foosball games using slash commands.
+
+The following commands are available:
+
+| Command  | Description |
+|----------|-------------|
+| /new     | Starts a new game |
+| /reset   | Reset the current game |
+| /current | Who is in? |
+| /play    | Join game |
+| /giveup  | Leave game |
+| /explain | Shows help |
+| /ping    | Bot healthcheck |
 
 # Installation
 
