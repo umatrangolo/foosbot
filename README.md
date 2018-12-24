@@ -47,7 +47,7 @@ and no sh, install the tarball into its home dir and the run in a tmux
 screen:
 
 ```shell
-  sudo -u foosbot SECRET=e9137987cc52d2db2f58750632b154d7 /home/foosbot/foosbot
+  sudo -u foosbot SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx /home/foosbot/foosbot
 ```
 
 This will start the bot listening in port 9000 for incoming slack
@@ -73,5 +73,9 @@ E.g. to setup the '/new' command fill the form with:
 3. Short Description: $your-description
 
 Repeat for all the commands.
+
+Once you done keep note of the `Signing Secret` under the `App
+Credentials` section: this is the one you need to provide to the bot
+as its secret.
 
 Dublin, December 2018
