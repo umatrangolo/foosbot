@@ -6,13 +6,13 @@ The following commands are available:
 
 | Command  | Description |
 |----------|-------------|
-| /new     | Starts a new game |
-| /reset   | Reset the current game |
-| /current | Who is in? |
-| /play    | Join game |
-| /giveup  | Leave game |
-| /explain | Shows help |
-| /ping    | Bot healthcheck |
+| */new*     | _Starts a new game_ |
+| */reset*   | _Reset the current game_ |
+| */current* | _Who is in?_ |
+| */play*    | _Join game_ |
+| */giveup*  | _Leave game_ |
+| */explain* | _Shows help_ |
+| */ping*    | _Bot healthcheck_ |
 
 # Installation
 
