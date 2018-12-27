@@ -26,7 +26,17 @@ func exSignedReqBody(r *http.Request, secret []byte) (signedReqBody *[]byte, err
 		return string(messageMAC) == hex.EncodeToString(expectedMAC)
 	}
 
-	ts, messageMAC := r.Header["X-Slack-Request-Timestamp"][0], strings.Split(r.Header["X-Slack-Signature"][0], "=")[1]
+	// Safely extract what we need from the Header(s) section
+	slackReqTs, ok := r.Header["X-Slack-Request-Timestamp"]
+	if !ok || len(slackReqTs) == 0 {
+		return nil, fmt.Errorf("No [X-Slack-Request-Timestamp] header")
+	}
+	slackReqSignature, ok := r.Header["X-Slack-Signature"]
+	if !ok || len(slackReqSignature) == 0 {
+		return nil, fmt.Errorf("No [X-Slack-Signature] header")
+	}
+	ts, messageMAC := slackReqTs[0], strings.Split(slackReqSignature[0], "=")[1]
+
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
