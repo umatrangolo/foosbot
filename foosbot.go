@@ -135,8 +135,8 @@ func mkTeams(players map[string]int) (left [2]string, right [2]string) {
 
 	left[0] = challengers[0].uid
 	left[1] = challengers[1].uid
-	right[0] = challengers[0].uid
-	right[1] = challengers[1].uid
+	right[0] = challengers[2].uid
+	right[1] = challengers[3].uid
 
 	return left, right
 }
