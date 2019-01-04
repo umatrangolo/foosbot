@@ -157,6 +157,12 @@ func parseCommand(r *http.Request) (cmd, user, userId string, err error) {
 	return cmd, user, userId, nil
 }
 
+func mkErrorResp(w http.ResponseWriter, msg string) error {
+	w.WriteHeader(400)
+	fmt.Fprintf(w, msg)
+	return nil
+}
+
 func mkSlackResp(w http.ResponseWriter, text string, texts []string) error {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -206,7 +212,9 @@ func main() {
 		log.Printf("%s [%v] (%v) : %+v", r.Method, r.URL, r.RemoteAddr, r)
 		command, user, userId, err := parseCommand(r)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			log.Printf("error: %v", err)
+			mkErrorResp(w, "Invalid request")
+			return
 		}
 
 		switch current.State {
