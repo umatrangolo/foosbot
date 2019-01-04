@@ -195,6 +195,13 @@ func init() {
 	secret = []byte(s)
 }
 
+func mkNewGame(current Status, userId string) Status {
+	current.State = WaitingForPlayers
+	current.Players = map[string]int{}
+	current.Players[userId] = rand.Int()
+	return current
+}
+
 func main() {
 	log.Println("Starting [foosbot] slack app")
 
@@ -219,19 +226,17 @@ func main() {
 
 		switch current.State {
 		case NoGame:
-			if command == Play || command == GiveUp || command == Current || command == Reset {
+			if command == Play {
+				log.Printf("No open game: creating a new one")
+				current = mkNewGame(current, userId)
+				mkSlackResp(w, fmt.Sprintf("User <@%s> just started a new game", userId), []string{"Use */play* to join"})
+			} else if command == GiveUp || command == Current || command == Reset {
 				log.Printf("No open game")
-				msg := fmt.Sprintf("<@%s> There is no open game", userId)
-				mkSlackResp(w, msg, []string{"Use the */new* command to start a new one"})
+				mkSlackResp(w, fmt.Sprintf("<@%s> There is no open game", userId), []string{"Use the */new* command to start a new one"})
 			} else if command == New {
 				log.Printf("User [%s] created a new game.", user)
-				current.State = WaitingForPlayers
-				current.Players = map[string]int{}
-				current.Players[userId] = rand.Int()
-				log.Printf("[WaitingForPlayers] players: %v", current.Players)
-				w.Header().Set("Content-Type", "application/json")
-				msg := fmt.Sprintf("User <@%s> just started a new game", userId)
-				mkSlackResp(w, msg, []string{"Use */play* to join"})
+				current = mkNewGame(current, userId)
+				mkSlackResp(w, fmt.Sprintf("User <@%s> just started a new game", userId), []string{"Use */play* to join"})
 			} else if command == Explain {
 				mkSlackResp(w, ExplainMessage, []string{})
 			} else {
@@ -247,31 +252,28 @@ func main() {
 					log.Printf("[WaitingForPlayers] players: %v", current.Players)
 					if len(current.Players) == 4 {
 						firstTeam, secondTeam := mkTeams(current.Players)
-						msg := fmt.Sprintf("[<@%s> - <@%s>] vs. [<@%s> - <@%s>]", firstTeam[0], firstTeam[1], secondTeam[0], secondTeam[1])
-						mkSlackResp(w, msg, []string{":bell::soccer: *Game is on!* :bell::soccer:"})
+						mkSlackResp(w, fmt.Sprintf("[<@%s> - <@%s>] vs. [<@%s> - <@%s>]", firstTeam[0], firstTeam[1], secondTeam[0], secondTeam[1]), []string{":bell::soccer: *Game is on!* :bell::soccer:"})
 						current = Status{
 							State: NoGame,
 							Players: map[string]int{},
 						}
 					} else {
-						msg := fmt.Sprintf("<@%s> you have been added to the current game", userId)
 						missing := mkMissingPlayers(4 - len(current.Players))
 						attach := []string{
 							fmt.Sprintf("The game needs %s more players", strings.Join(missing, "")),
 							"Use */play* to join, */explain* for help",
 						}
-						mkSlackResp(w, msg, attach)
+						mkSlackResp(w, fmt.Sprintf("<@%s> you have been added to the current game", userId), attach)
 					}
 				} else {
 					log.Printf("User [%s] already signed up for the current game", user)
 					log.Printf("[WaitingForPlayers] players: %v", current.Players)
-					msg := fmt.Sprintf("<@%s> you have already been added to the current game", userId)
 					missing := mkMissingPlayers(4 - len(current.Players))
 					attach := []string{
 						fmt.Sprintf("The game needs %s more players", strings.Join(missing, "")),
 						"Use */play* to join, */explain* for help",
 					}
-					mkSlackResp(w, msg, attach)
+					mkSlackResp(w, fmt.Sprintf("<@%s> you have already been added to the current game", userId), attach)
 				}
 			} else if command == GiveUp {
 				if ok {
@@ -279,26 +281,23 @@ func main() {
 					delete(current.Players, userId)
 					log.Printf("[WaitingForPlayers] players: %v", current.Players)
 					if len(current.Players) == 0 {
-						msg := fmt.Sprintf("<@%s> Just abandoned the game", userId)
-						mkSlackResp(w, msg, []string{"No players left: game has been canceled!"})
+						mkSlackResp(w, fmt.Sprintf("<@%s> Just abandoned the game", userId), []string{"No players left: game has been canceled!"})
 						current = Status{
 							State: NoGame,
 							Players: map[string]int{},
 						}
 					} else {
-						msg := fmt.Sprintf("<@%s> Just abandoned the game", userId)
 						missing := mkMissingPlayers(4 - len(current.Players))
 						attach := []string{
 							fmt.Sprintf("The game needs %s more players", strings.Join(missing, "")),
 							"Use */play* to join, */explain* for help",
 						}
-						mkSlackResp(w, msg, attach)
+						mkSlackResp(w, fmt.Sprintf("<@%s> Just abandoned the game", userId), attach)
 					}
 				} else {
 					log.Printf("User [%s] never signed up for the current game", user)
 					log.Printf("[WaitingForPlayers] players: %v", current.Players)
-					msg := fmt.Sprintf("<@%s> you are not in the current game", userId)
-					mkSlackResp(w, msg, []string{})
+					mkSlackResp(w, fmt.Sprintf("<@%s> you are not in the current game", userId), []string{})
 				}
 			} else if command == Reset {
 				mkSlackResp(w, "Game has been canceled!", []string{})
@@ -311,13 +310,12 @@ func main() {
 			} else if command == New {
 				log.Printf("[WaitingForPlayers] Game is already created")
 				log.Printf("[WaitingForPlayers] players: %v", current.Players)
-				msg := "Game already created"
 				missing := mkMissingPlayers(4 - len(current.Players))
 				attach := []string{
 					fmt.Sprintf("The game needs %s more players", strings.Join(missing, "")),
 					"Use */play* to join, */explain* for help",
 				}
-				mkSlackResp(w, msg, attach)
+				mkSlackResp(w, "Game already created", attach)
 			} else if command == Current {
 				log.Printf("[WaitingForPlayers] Asked for stats")
 				players := current.getPlayers()
